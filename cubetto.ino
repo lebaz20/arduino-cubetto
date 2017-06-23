@@ -41,8 +41,7 @@ void prepareForwardMove(float newVoltage) {
     Serial.println("do forward move");
     doStep(servo1);
     doStep(servo2);
-    // update old voltage to do only one step
-    oldVoltage = newVoltage;
+    stopMoving(newVoltage);
   }
 }
 
@@ -50,8 +49,7 @@ void prepareLeftMove(float newVoltage) {
   if (inRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage, newVoltage)) {
     Serial.println("do left move");
     doStep(servo2);
-    // update old voltage to do only one step
-    oldVoltage = newVoltage;
+    stopMoving(newVoltage);
   }
 }
 
@@ -59,8 +57,7 @@ void prepareRightMove(float newVoltage) {
   if (inRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage, newVoltage)) {
     Serial.println("do right move");
     doStep(servo1);
-    // update old voltage to do only one step
-    oldVoltage = newVoltage;
+    stopMoving(newVoltage);
   }
 }
 
@@ -78,3 +75,9 @@ void doStep(Servo motor) {
   motor.write(stepAngle);
   delay(1000);
 }
+
+void stopMoving(float newVoltage) {
+  // update old voltage to do only one step
+  oldVoltage = newVoltage;
+}
+
