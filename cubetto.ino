@@ -1,12 +1,17 @@
 #include <Servo.h> 
 
+int analogInputsPins[] = {A0, A1, A2, A3};
+int analogInputsPinsForFunction[] = {A4, A5};
 int stepAngle = 90;
+int stepDelay = 1000;
 float minVoltageForLeftMove = 2.05;
 float maxVoltageForLeftMove = 2.85;
 float minVoltageForRightMove = 1.05;
 float maxVoltageForRightMove = 1.85;
 float minVoltageForForwardMove = 3.05;
 float maxVoltageForForwardMove = 3.85;
+float minVoltageForFunction = 4.05;
+float maxVoltageForFunction = 4.85;
 int servo1Pin = 6;
 int servo2Pin = 9;
 
@@ -23,17 +28,43 @@ void setup() {
 }
 
 void loop() {
-  // read the input on analog pin 0:
-  int sensorValue = analogRead(A0);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  float newVoltage = sensorValue * (5.0 / 1023.0);
-  Serial.println(newVoltage);
 
-  prepareLeftMove(newVoltage);
+  // loop from the lowest pin to the highest:
+  for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
+    readInputAndPrepareMovements(analogInputsPins[analogPinKey], true);
+  }
+}
+
+void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
+  // read the input on analog pin:
+    int sensorValue = analogRead(analogInputPin);
+    // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+    float newVoltage = sensorValue * (5.0 / 1023.0);
+    Serial.println(newVoltage);
   
-  prepareRightMove(newVoltage);
+    prepareLeftMove(newVoltage);
+    
+    prepareRightMove(newVoltage);
+  
+    prepareForwardMove(newVoltage);
 
-  prepareForwardMove(newVoltage);
+    // normal pins can run functions
+    // function pins can not run functions -- infinite loop hazard
+    if (canRunFunction == true) {
+      prepareFunctionMove(newVoltage);
+    }
+    
+    delay(stepDelay);
+}
+
+void prepareFunctionMove(float newVoltage) {
+  if (inRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage, newVoltage)) {
+    Serial.println("do function move");
+    // loop from the lowest function pin to the highest:
+    for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPinsForFunction) / sizeof(int); analogPinKey++) {
+      readInputAndPrepareMovements(analogInputsPinsForFunction[analogPinKey], false);
+    }
+  }
 }
 
 void prepareForwardMove(float newVoltage) {
@@ -71,9 +102,9 @@ void doStep(Servo motor) {
   Serial.println("do step");
   // move a step
   motor.write(0);
-  delay(1000);
+  delay(stepDelay);
   motor.write(stepAngle);
-  delay(1000);
+  delay(stepDelay);
 }
 
 void stopMoving(float newVoltage) {
