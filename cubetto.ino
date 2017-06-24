@@ -15,7 +15,7 @@ float maxVoltageForFunction = 4.85;
 int servo1Pin = 6;
 int servo2Pin = 9;
 
-float oldVoltage;
+float oldVoltage[10];
 Servo servo1; 
 Servo servo2;
 
@@ -42,23 +42,23 @@ void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
     float newVoltage = sensorValue * (5.0 / 1023.0);
     Serial.println(newVoltage);
   
-    prepareLeftMove(newVoltage);
+    prepareLeftMove(newVoltage, analogInputPin);
     
-    prepareRightMove(newVoltage);
+    prepareRightMove(newVoltage, analogInputPin);
   
-    prepareForwardMove(newVoltage);
+    prepareForwardMove(newVoltage, analogInputPin);
 
     // normal pins can run functions
     // function pins can not run functions -- infinite loop hazard
     if (canRunFunction == true) {
-      prepareFunctionMove(newVoltage);
+      prepareFunctionMove(newVoltage, analogInputPin);
     }
     
     delay(stepDelay);
 }
 
-void prepareFunctionMove(float newVoltage) {
-  if (inRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage, newVoltage)) {
+void prepareFunctionMove(float newVoltage, int analogInputPin) {
+  if (inRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do function move");
     // loop from the lowest function pin to the highest:
     for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPinsForFunction) / sizeof(int); analogPinKey++) {
@@ -67,28 +67,28 @@ void prepareFunctionMove(float newVoltage) {
   }
 }
 
-void prepareForwardMove(float newVoltage) {
-  if (inRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage, newVoltage)) {
+void prepareForwardMove(float newVoltage, int analogInputPin) {
+  if (inRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do forward move");
     doStep(servo1);
     doStep(servo2);
-    stopMoving(newVoltage);
+    stopMoving(newVoltage, analogInputPin);
   }
 }
 
-void prepareLeftMove(float newVoltage) {
-  if (inRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage, newVoltage)) {
+void prepareLeftMove(float newVoltage, int analogInputPin) {
+  if (inRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do left move");
     doStep(servo2);
-    stopMoving(newVoltage);
+    stopMoving(newVoltage, analogInputPin);
   }
 }
 
-void prepareRightMove(float newVoltage) {
-  if (inRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage, newVoltage)) {
+void prepareRightMove(float newVoltage, int analogInputPin) {
+  if (inRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do right move");
     doStep(servo1);
-    stopMoving(newVoltage);
+    stopMoving(newVoltage, analogInputPin);
   }
 }
 
@@ -107,8 +107,8 @@ void doStep(Servo motor) {
   delay(stepDelay);
 }
 
-void stopMoving(float newVoltage) {
+void stopMoving(float newVoltage, int analogInputPin) {
   // update old voltage to do only one step
-  oldVoltage = newVoltage;
+  oldVoltage[analogInputPin] = newVoltage;
 }
 
