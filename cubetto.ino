@@ -62,6 +62,9 @@ void prepareFunctionMove(float newVoltage, int analogInputPin) {
     Serial.println("do function move");
     // loop from the lowest function pin to the highest:
     for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPinsForFunction) / sizeof(int); analogPinKey++) {
+      // reset function movements to be able to trigger them whenever called
+      oldVoltage[analogInputsPinsForFunction[analogPinKey]] = 0;
+      
       readInputAndPrepareMovements(analogInputsPinsForFunction[analogPinKey], false);
     }
   }
