@@ -73,8 +73,8 @@ void prepareFunctionMove(float newVoltage, int analogInputPin) {
 void prepareForwardMove(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do forward move");
-    doStep(servo1);
-    doStep(servo2);
+    Servo motors[] = {servo1, servo2};
+    doStep(motors);
     stopMoving(newVoltage, analogInputPin);
   }
 }
@@ -82,7 +82,8 @@ void prepareForwardMove(float newVoltage, int analogInputPin) {
 void prepareLeftMove(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do left move");
-    doStep(servo2);
+    Servo motors[] = {servo2};
+    doStep(motors);
     stopMoving(newVoltage, analogInputPin);
   }
 }
@@ -90,7 +91,8 @@ void prepareLeftMove(float newVoltage, int analogInputPin) {
 void prepareRightMove(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do right move");
-    doStep(servo1);
+    Servo motors[] = {servo1};
+    doStep(motors);
     stopMoving(newVoltage, analogInputPin);
   }
 }
@@ -101,13 +103,17 @@ bool isInRange(float minValue, float maxValue, float oldValue, float currentValu
   return  (! (oldValue < maxValue && oldValue > minValue) && currentValue < maxValue && currentValue > minValue);
 }
 
-void doStep(Servo motor) {
+void doStep(Servo motors[]) {
   Serial.println("do step");
   // move a step
-  motor.write(0);
-  delay(stepDelay);
-  motor.write(stepAngle);
-  delay(stepDelay);
+  int angles[] = {0, stepAngle};
+  for (int angleKey = 0; angleKey < sizeof(angles) / sizeof(int); angleKey++) {
+    // loop on all motors to set angle
+    for (int motorKey = 0; motorKey < sizeof(motors) / sizeof(Servo); motorKey++) {
+      motors[motorKey].write(angles[angleKey]);
+    }
+    delay(stepDelay);
+  }
 }
 
 void stopMoving(float newVoltage, int analogInputPin) {
