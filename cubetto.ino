@@ -58,7 +58,7 @@ void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
 }
 
 void prepareFunctionMove(float newVoltage, int analogInputPin) {
-  if (inRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage[analogInputPin], newVoltage)) {
+  if (isInRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do function move");
     // loop from the lowest function pin to the highest:
     for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPinsForFunction) / sizeof(int); analogPinKey++) {
@@ -71,7 +71,7 @@ void prepareFunctionMove(float newVoltage, int analogInputPin) {
 }
 
 void prepareForwardMove(float newVoltage, int analogInputPin) {
-  if (inRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage[analogInputPin], newVoltage)) {
+  if (isInRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do forward move");
     doStep(servo1);
     doStep(servo2);
@@ -80,7 +80,7 @@ void prepareForwardMove(float newVoltage, int analogInputPin) {
 }
 
 void prepareLeftMove(float newVoltage, int analogInputPin) {
-  if (inRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage[analogInputPin], newVoltage)) {
+  if (isInRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do left move");
     doStep(servo2);
     stopMoving(newVoltage, analogInputPin);
@@ -88,14 +88,14 @@ void prepareLeftMove(float newVoltage, int analogInputPin) {
 }
 
 void prepareRightMove(float newVoltage, int analogInputPin) {
-  if (inRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage[analogInputPin], newVoltage)) {
+  if (isInRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do right move");
     doStep(servo1);
     stopMoving(newVoltage, analogInputPin);
   }
 }
 
-bool inRange(float minValue, float maxValue, float oldValue, float currentValue) {
+bool isInRange(float minValue, float maxValue, float oldValue, float currentValue) {
   // old value not in range, while current value is in range
   // in range means less than max and more than min
   return  (! (oldValue < maxValue && oldValue > minValue) && currentValue < maxValue && currentValue > minValue);
