@@ -29,10 +29,13 @@ void setup() {
 
 void loop() {
 
-  // loop from the lowest pin to the highest:
-  for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
-    readInputAndPrepareMovements(analogInputsPins[analogPinKey], true);
+  if (shouldReadInputs()) {
+    // loop from the lowest pin to the highest:
+    for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
+      readInputAndPrepareMovements(analogInputsPins[analogPinKey], true);
+    }
   }
+  prepareResetListener();
 }
 
 void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
@@ -42,11 +45,11 @@ void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
     float newVoltage = sensorValue * (5.0 / 1023.0);
     Serial.println(newVoltage);
   
-    prepareLeftMove(newVoltage, analogInputPin);
+    prepareLeftMoveListener(newVoltage, analogInputPin);
     
-    prepareRightMove(newVoltage, analogInputPin);
+    prepareRightMoveListener(newVoltage, analogInputPin);
   
-    prepareForwardMove(newVoltage, analogInputPin);
+    prepareForwardMoveListener(newVoltage, analogInputPin);
 
     // normal pins can run functions
     // function pins can not run functions -- infinite loop hazard
@@ -70,7 +73,7 @@ void prepareFunctionMove(float newVoltage, int analogInputPin) {
   }
 }
 
-void prepareForwardMove(float newVoltage, int analogInputPin) {
+void prepareForwardMoveListener(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForForwardMove, maxVoltageForForwardMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do forward move");
     Servo motors[] = {servo1, servo2};
@@ -79,7 +82,7 @@ void prepareForwardMove(float newVoltage, int analogInputPin) {
   }
 }
 
-void prepareLeftMove(float newVoltage, int analogInputPin) {
+void prepareLeftMoveListener(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForLeftMove, maxVoltageForLeftMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do left move");
     Servo motors[] = {servo2};
@@ -88,7 +91,7 @@ void prepareLeftMove(float newVoltage, int analogInputPin) {
   }
 }
 
-void prepareRightMove(float newVoltage, int analogInputPin) {
+void prepareRightMoveListener(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForRightMove, maxVoltageForRightMove, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do right move");
     Servo motors[] = {servo1};
@@ -97,10 +100,40 @@ void prepareRightMove(float newVoltage, int analogInputPin) {
   }
 }
 
+void prepareResetListener() {
+  // reset only if all analog inputs are holding zeros or digital low
+  bool shouldReset = true;
+  // loop from the lowest pin to the highest:
+  for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
+    if (digitalRead(analogInputsPins[analogPinKey]) != LOW) {
+      shouldReset = false;
+    }
+  }
+
+  if (shouldReset == true) {
+    // loop from the lowest pin to the highest:
+    for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
+      oldVoltage[analogPinKey] = 0;
+    }
+  }
+}
+
 bool isInRange(float minValue, float maxValue, float oldValue, float currentValue) {
   // old value not in range, while current value is in range
   // in range means less than max and more than min
-  return  (! (oldValue < maxValue && oldValue > minValue) && currentValue < maxValue && currentValue > minValue);
+  return (! (oldValue < maxValue && oldValue > minValue) && currentValue < maxValue && currentValue > minValue);
+}
+
+bool shouldReadInputs() {
+  // read from inputs only if old voltages are all set to 0
+  bool shouldReadInputs = true;
+  // loop from the lowest pin to the highest:
+  for (int analogPinKey = 0; analogPinKey < sizeof(analogInputsPins) / sizeof(int); analogPinKey++) {
+    if (oldVoltage[analogPinKey] != 0) {
+      shouldReadInputs = false;
+    }
+  }
+  return shouldReadInputs;
 }
 
 void doStep(Servo motors[]) {
