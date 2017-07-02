@@ -54,13 +54,13 @@ void readInputAndPrepareMovements (int analogInputPin, bool canRunFunction) {
     // normal pins can run functions
     // function pins can not run functions -- infinite loop hazard
     if (canRunFunction == true) {
-      prepareFunctionMove(newVoltage, analogInputPin);
+      prepareFunctionMoveListener(newVoltage, analogInputPin);
     }
     
     delay(stepDelay);
 }
 
-void prepareFunctionMove(float newVoltage, int analogInputPin) {
+void prepareFunctionMoveListener(float newVoltage, int analogInputPin) {
   if (isInRange(minVoltageForFunction, maxVoltageForFunction, oldVoltage[analogInputPin], newVoltage)) {
     Serial.println("do function move");
     // loop from the lowest function pin to the highest:
